@@ -113,10 +113,11 @@ function Portal({onOpen}:{onOpen:(id:string)=>void}){
 }
 const menu=[{id:'overview',icon:'grid',label:'Overview'},{id:'leads',icon:'chart',label:'CRM & Leads'},{id:'clients',icon:'users',label:'Clients'},{id:'projects',icon:'briefcase',label:'Projects'},{id:'work',icon:'check',label:'My Work'},{id:'finance',icon:'wallet',label:'Finance'}];
 export default function App(){
- const [user,setUser]=useState<User|null|undefined>(undefined),[page,setPage]=useState('overview'),[project,setProject]=useState<string|null>(null),[toast,setToast]=useState(''),[sidebar,setSidebar]=useState(false);
- useEffect(()=>{get<{user:User|null}>('/api/me').then(x=>{setUser(x.user);if(x.user?.role==='client')setPage('portal')}).catch(()=>setUser(null))},[]);
+ const [user,setUser]=useState<User|null|undefined>(undefined),[page,setPage]=useState('overview'),[project,setProject]=useState<string|null>(null),[toast,setToast]=useState(''),[sidebar,setSidebar]=useState(false),[bootError,setBootError]=useState<string|null>(null);
+ useEffect(()=>{get<{user:User|null}>('/api/me').then(x=>{setUser(x.user);if(x.user?.role==='client')setPage('portal')}).catch((error:Error)=>{setBootError(error.message);setUser(null)})},[]);
  function notify(message:string){setToast(message);window.setTimeout(()=>setToast(''),4500)}
  async function logout(){try{await post('/api/auth/logout',{})}finally{setUser(null);setProject(null)}}
+ if(user===undefined && bootError)return <div className="load-screen"><div className="loading-mark">dg</div><p>DGAP OS could not reach the API.</p><p className="formerror">{bootError}</p><button className="btn primary" onClick={()=>window.location.reload()}>Retry</button></div>;
  if(user===undefined)return <div className="load-screen"><div className="loading-mark">dg</div><p>Opening DGAP OS…</p></div>;
  if(!user)return <Login onLogin={u=>{setUser(u);setPage(u.role==='client'?'portal':'overview')}}/>;
  const client=user.role==='client';const finance=['admin','finance'].includes(user.role);
